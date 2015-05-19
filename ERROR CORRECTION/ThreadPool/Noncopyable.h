@@ -6,7 +6,7 @@
  ************************************************************************/
 
 #ifndef NONCOPYABLE_H
-#define NONCOPYALBE_H
+#define NONCOPYABLE_H
 class Noncopyable
 {
 protected:

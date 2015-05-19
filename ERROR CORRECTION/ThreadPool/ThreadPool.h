@@ -11,7 +11,9 @@
 #include "Buffer.h"
 #include <vector>
 #include "Thread.h"
+#include "MyPoolThread.h"
 
+class Thread;
 class ThreadPool:private Noncopyable
 {
 public:
@@ -30,3 +32,4 @@ private:
 	std::vector<Thread *> threadsVec_;
 	bool isStarting_;
 };
+#endif

@@ -12,7 +12,7 @@ Thread::Thread()
 {}
 Thread::~Thread()
 {
-	pthread_destroy(pthId_);
+	pthread_detach(pthId_);
 }
 void Thread::start()
 {

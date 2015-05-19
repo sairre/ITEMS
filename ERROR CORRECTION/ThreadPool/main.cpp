@@ -7,12 +7,26 @@
 
 #include<iostream>
 #include <unistd.h>
-#include "MutexLock.h"
+#include "ThreadPool.h"
+#include "Task.h"
+#include "MyTask.h"
 int main(void)
 {
-	MutexLock m;
-	m.lock();
-	sleep(4);
-	m.unlock();
+	ThreadPool threadpool(5,10);
+	threadpool.start();
+
+	Task * pTask=new MyTask();
+	
+	while(1)
+	{
+		static int i=0;
+		threadpool.addTask(pTask);
+		sleep(5);
+		std::cout<<"task"<<++i<<std::endl;
+
+	}
+	delete pTask;
+
+
 	return 0;
 }

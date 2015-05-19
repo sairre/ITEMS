@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include "ThreadPool.h"
+
 ThreadPool::ThreadPool(std::size_t bufSize,std::size_t threadsNum):
 	buffer_(bufSize),
 	threadsNum_(threadsNum),
@@ -13,7 +14,7 @@ ThreadPool::ThreadPool(std::size_t bufSize,std::size_t threadsNum):
 {
 	for(std::size_t idx=0;idx!=threadsNum_;++idx)
 	{
-		Thread * pThread =new MypoolThread(*this);
+		Thread * pThread =new MyPoolThread(*this);
 		threadsVec_.push_back(pThread);
 	}
 }
@@ -33,11 +34,11 @@ void ThreadPool::stop()
 		while(!buffer_.empty())
 			buffer_.deleteElement();
 		std::vector<Thread *>::iterator it=threadsVec_.begin();
-		for(;it!=threadsVec_.end();++It)
+		for(;it!=threadsVec_.end();++it)
 		{
 			(*it)->join();
 		}
-		threadsVec_=clear();
+		threadsVec_.clear();
 	}
 	isStarting_=false;
 }
@@ -46,7 +47,7 @@ void ThreadPool::addTask(Task * pTask)
 	buffer_.addElement(pTask);
 }
 
-void ThreadPool::getTask()
+Task * ThreadPool::getTask()
 {
 	Task *pTask=buffer_.deleteElement();
 	return pTask;
