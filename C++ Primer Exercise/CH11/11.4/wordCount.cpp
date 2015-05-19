@@ -10,7 +10,6 @@
 #include <string>
 #include <set>
 #include <cstddef>
-#include 
 int main(void)
 {
 	std::size_t i;
@@ -25,6 +24,7 @@ int main(void)
 			break;
 		if(exclude.find(word)==exclude.end())
 		{
+			word[0]=tolower(word[0]);
 			++wordcount[word];
 
 		}
