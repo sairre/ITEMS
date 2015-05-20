@@ -34,4 +34,22 @@ int main(void)
 			homemap[first_name].push_back(word);
 		}
 	}
+	std::map<std::string,std::vector<std::string> >::iterator it=homemap.begin();
+	std::cout<<it->first<<std::endl;
+	std::vector<std::string>::iterator vit=(it->second).begin();
+	std::vector<std::string>::iterator vend=(it->second).end();
+	for(;vit!=vend;vit++)
+		std::cout<<*vit<<std::endl;
+
+
+	std::cout<<"input some information about new families"<<std::endl;
+
+
+
+
+
+
+
+	
+
 }
