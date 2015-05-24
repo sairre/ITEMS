@@ -19,6 +19,7 @@ std::vector<std::string> file;       //to store the whole file
 std::map<std::string,std::set<line_no>> wordMapNo;
 
 //return string without dots nor blank
+//mis-judge words like XXX,BBB for XXXBBB
 std::string cleanup_str(const std::string & word)
 {
 	std::string ret;
@@ -80,7 +81,7 @@ void runQueries(std::ifstream & infile)
 int main(void)
 {
 	std::ifstream infile;
-	infile.open("a.txt");
+	infile.open("b.txt");
 	if(!infile.is_open())
 	{
 	
