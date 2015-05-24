@@ -27,7 +27,7 @@ std::string cleanup_str(const std::string & word)
 			ret+=tolower(*it);
 	return ret;
 }
-void input_text(ifstream &is)            
+void input_text(std::ifstream &is)            
 {
 	std::string text;
 	while(getline(is,text))           //fetch each line once until 'is' gets ended
@@ -36,17 +36,17 @@ void input_text(ifstream &is)
 		int no=file.size()-1;
 
 		//break down  a line into words
-		istringstream line(text);
+		std::istringstream line(text);
 		std::string word;
 		while(line>>word)
 		{
-			wordMapNo[cleanup_str[word]].insert(no);
+			wordMapNo[cleanup_str(word)].insert(no);
 		}
 
 	}
 }
 
-ostream & query_and_print(const std::string &sought,ostream &os)
+std::ostream & query_and_print(const std::string &sought,std::ostream &os)
 {
 	auto loc=wordMapNo.find(sought);
 	if(loc==wordMapNo.end())
@@ -55,7 +55,38 @@ ostream & query_and_print(const std::string &sought,ostream &os)
 	}
 	else
 	{
-		auto lno=loc->second;
-		os<<sought<<" appears"<<lin
+		auto lines=loc->second;
+		os<<sought<<" appears"<<lines.size()<<" times"<<std::endl;
+		for(auto num :lines)
+		{
+			os<<"\t"<<num+1<<"-th"<<"line"<<*(file.begin()+num)<<std::endl;
+		}
 	}
+	return os;
+}
+void runQueries(std::ifstream & infile)
+{
+	input_text(infile);
+
+	while(true)
+	{
+		std::cout<<"enter the word to look for ,or q to quit:"<<std::endl;
+		std::string s;
+		if(!(std::cin>>s)||s=="q")
+			break;
+		query_and_print(s,std::cout)<<std::endl;
+	}
+}
+int main(void)
+{
+	std::ifstream infile;
+	infile.open("a.txt");
+	if(!infile.is_open())
+	{
+	
+		std::cout<<"open failed"<<std::endl;
+		exit(1);
+	}
+	runQueries(infile);
+
 }
