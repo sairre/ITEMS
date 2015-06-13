@@ -13,5 +13,12 @@ namespace Ch
 	{
 		std::cout<<"Phone constructor"<<std::endl;
 	}
-	Phone::~Phone
+	Phone::~Phone()
+	{
+		std::cout<<"Phone destory"<<std::endl;
+	}
+	Phone::ShowDecoreate()
+	{
+		std::cout<<"default virtual ShowDecoreate";
+	}
 }

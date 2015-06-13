@@ -1,19 +1,11 @@
 /*************************************************************************
-	> File Name: Phone.h
+	> File Name: NokiaPhone.cpp
 	> Author: SAIRRE
 	> Mail:496389633@qq.com 
-	> Created Time: Sat 16 May 2015 10:25:54 PM CST
+	> Created Time: Sat 13 Jun 2015 11:32:23 AM CST
  ************************************************************************/
-#ifndef CH_PHONE_H
-#define CH_PHONE_H
 
 namespace Ch
 {
-class Phone
-{
-public:
-	Phone();
-	virtual ~Phone();
-	virtual void ShowDecoreate();
-};
+
 }

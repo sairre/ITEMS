@@ -1,19 +1,19 @@
 /*************************************************************************
-	> File Name: Phone.h
+	> File Name: NokiaPhone.h
 	> Author: SAIRRE
 	> Mail:496389633@qq.com 
-	> Created Time: Sat 16 May 2015 10:25:54 PM CST
+	> Created Time: Sat 13 Jun 2015 11:11:25 AM CST
  ************************************************************************/
-#ifndef CH_PHONE_H
-#define CH_PHONE_H
-
+#ifndef CH_
 namespace Ch
 {
-class Phone
+class NokiaPhone:Public Phone
 {
-public:
-	Phone();
-	virtual ~Phone();
-	virtual void ShowDecoreate();
+public:	
+	NokiaPhone();
+	~NokiaPhone();
+	ShowDecoreate();
+private:
+	std::string m_name;
 };
 }
