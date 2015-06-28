@@ -17,7 +17,7 @@ namespace Ch
 	{
 		std::cout<<"Phone destory"<<std::endl;
 	}
-	Phone::ShowDecoreate()
+	void Phone::ShowDecoreate()
 	{
 		std::cout<<"default virtual ShowDecoreate";
 	}

@@ -9,7 +9,7 @@ namespace Ch
 {
 NokiaPhone::NokiaPhone()
 {
-	std::cout<<"default NokiaPhone constructor"<<std::endl;
+std::cout<<"default NokiaPhone constructor"<<std::endl;
 }
 NokiaPhone::~NokiaPhone()
 {

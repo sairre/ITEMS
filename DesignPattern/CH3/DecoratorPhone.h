@@ -1,20 +1,19 @@
 /*************************************************************************
-	> File Name: Phone.h
+	> File Name: DecoratorPhone.h
 	> Author: SAIRRE
 	> Mail:496389633@qq.com 
-	> Created Time: Sat 16 May 2015 10:25:54 PM CST
+	> Created Time: Tue 16 Jun 2015 09:46:40 AM CST
  ************************************************************************/
-#ifndef CH_PHONE_H
-#define CH_PHONE_H
 
+#include "Phone.h"
 namespace Ch
 {
-class Phone
+class DecoratorPhone:public Phone
 {
 public:
-	Phone();
-	virtual ~Phone();
-	virtual void ShowDecoreate();
-};
+	DecoratorPhone();
+	~DecoratorPhone();
+	virtual ShowDecoreate();
+
 }
-#endif
+}
