@@ -1,66 +1,66 @@
 #include "TcpServer.h"
 
-bool SocketBlock::TcpServer::InitMember(void)
+SocketBlock::Socket::Socket() :statusConn(FALSE)
 {
 	memset(bufRecv, 0, sizeof(bufRecv));
 	memset(bufSend, 0, sizeof(bufSend));
-
-	ServerSocket = INVALID_SOCKET;
-	ClientSocket = INVALID_SOCKET;
-
-	StatusConn = FALSE;
-	return TRUE;
+	InitWinDll(2, 2);
 }
-bool SocketBlock::TcpServer::InitWinDll(int minorVer /* = 2 */,int majorVer /* = 2 */ )
+SocketBlock::Socket::~Socket()
+{
+	WSACleanup();
+}
+bool SocketBlock::Socket::InitWinDll(int minorVer /* = 2 */,int majorVer /* = 2 */ )
 {
 	WSADATA wsaData;
 	WORD sockVersion = MAKEWORD(minorVer, majorVer);
 	if (::WSAStartup(sockVersion, &wsaData) != 0)
 	{
-		ShowSocketMsg("Can't find a usable windows sockets dll");
+		ShowMsg("Can not find a usable Windows Sockets DLL !");
 		return FALSE;
 	}
 	if (LOBYTE(wsaData.wVersion) != minorVer || HIBYTE(wsaData.wVersion) != majorVer)
 	{
-		ShowSocketMsg("Can't find a usable windows sockets dll");
+		ShowMsg("Can not find a usable Windows Sockets DLL !");
 		return FALSE;
 	}
 	return TRUE;
 }
 bool SocketBlock::TcpServer::CreateServerSocket(void)
 {
-	ServerSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (INVALID_SOCKET == ServerSocket)
-	{
-		return HandleSocketError("Failed scoekt()!");
-	}
+	serverSocket = CreateSocket();
 	return TRUE;
 }
-bool SocketBlock::TcpServer::BindSocket(void)
+bool SocketBlock::TcpServer::BindSocket(int port,char * ip)
 {
 	SOCKADDR_IN addrServ;
 	addrServ.sin_family = AF_INET;
-	addrServ.sin_port = htons(SERVERPORT);
-	addrServ.sin_addr.s_addr = INADDR_ANY;
-	int ret = bind(ServerSocket,(const sockaddr *)&addrServ, sizeof(addrServ));
+	addrServ.sin_port = htons(port);
+	addrServ.sin_addr.s_addr = inet_addr(ip);
+	int ret = bind(serverSocket,(const sockaddr *)&addrServ, sizeof(addrServ));
 	if (SOCKET_ERROR == ret)
 	{
-		closesocket(ServerSocket);
-		return HandleSocketError("Failed Bind()!");
+
+		int ErrCode = WSAGetLastError();
+		ExitSocket(serverSocket);
+		ShowSocketMsg(ErrCode,"Bind Failed!");
+		return FALSE;
 	}
 	return TRUE;
 }
 bool SocketBlock::TcpServer::ListenSocket(void)
 {
-	int ret = listen(ServerSocket, 100);
+	int ret = listen(serverSocket, 100);
 	if (SOCKET_ERROR == ret)
 	{
-		closesocket(ServerSocket);
-		return HandleSocketError("Failed listen()!");
+		int ErrCode = WSAGetLastError();
+		ExitSocket(serverSocket);
+		ShowSocketMsg(ErrCode, "Listen Failed !");
+		return FALSE;
 	}
 
-	std::cout << "Server Starts Successfully!" << std::endl;
-	std::cout << "Waiting For New Clients ..." << std::endl;
+	ShowMsg("Server Starts Successfully!");
+	ShowMsg("Waiting For New Clients ...");
 
 	return TRUE;
 }
@@ -68,51 +68,141 @@ bool SocketBlock::TcpServer::AcceptSocekt(void)
 {
 	SOCKADDR_IN addrClient;
 	int addrClientLen = sizeof(addrClient);
-	ClientSocket = accept(ServerSocket, (sockaddr *)&addrClient, &addrClientLen);
-	if (INVALID_SOCKET == ClientSocket)
+	clientSocket = accept(serverSocket, (sockaddr *)&addrClient, &addrClientLen);
+	if (INVALID_SOCKET == clientSocket)
 	{
-		closesocket(ServerSocket);
-		return HandleSocketError("Failed accept()!");
+		int ErrCode = WSAGetLastError();
+		ExitSocket(serverSocket);
+		ShowSocketMsg(ErrCode, "Accept Failed !");
+		return FALSE;
 	}
 	else
 	{
-		StatusConn = TRUE;
+		SetConStatus(TRUE);
+		
 	}
 	char * pClientIp = inet_ntoa(addrClient.sin_addr);
 	unsigned int clientPort = ntohs(addrClient.sin_port);
-	std::cout << "Accept A Client:" << std::endl;
-	std::cout << "IP:" << pClientIp << std::endl;
-	std::cout << "Port:" << clientPort << std::endl;
+	ShowMsg("Accept A Client !");
 	return TRUE;
 
 }
-bool SocketBlock::TcpServer::CreateSocket(void)
+void SocketBlock::TcpServer::ServerRecvMsg(std::string & msg)
 {
-	ServerSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (INVALID_SOCKET == ServerSocket)
+	RecvMsg(clientSocket, serverSocket, msg);
+}
+void SocketBlock::TcpServer::ServerSendMsg(std::string & msg)
+{
+	SendMsg(clientSocket, serverSocket, msg);
+}
+int SocketBlock::Socket::RecvMsg(SOCKET RecvSocket, SOCKET SendSocket, std::string & msg)
+{
+	int nRecvLen = 0;          //n bytes received practically once
+	int nDataLen = 0;		   //Data full length;
+	int nTotData = 0;         // n bytes received practically  in total
+	int ErrCode = 0;
+	if (statusConn)
 	{
-		ShowErrorMsg();
+		memset(bufRecv, 0, sizeof(bufRecv));
+		nRecvLen = recv(SendSocket, ( char *)&nDataLen, 4, 0);
+	//	nDataLen = (int)bufRecv;
+		if (SOCKET_ERROR == nRecvLen)
+		{
+			ErrCode = WSAGetLastError();
+			ShowSocketMsg(ErrCode, "ServerSocket:Receive header msg failed");
+			SetConStatus(FALSE);
+			return SOCKET_ERROR;
+		}
+		else if (0 == nRecvLen)
+		{
+			ShowMsg("ServerSocket:ClientSocket has been closed");
+			SetConStatus(FALSE);
+			return 0;
+		}
+		nRecvLen = 0;
+		memset(bufRecv, 0, sizeof(bufRecv));
+	}
+	while (statusConn && (nTotData < nDataLen))
+	{
+		nRecvLen = recv(SendSocket, bufRecv + nTotData, nDataLen - nTotData, 0);
+		if (SOCKET_ERROR == nRecvLen)
+		{
+			ErrCode = WSAGetLastError();
+			ShowSocketMsg(ErrCode,"ServerSocket:Receive  msg failed");
+			SetConStatus(FALSE);
+			return SOCKET_ERROR;
+		}
+		else if (0 == nRecvLen)
+		{
+			ShowMsg("ServerSocket:ClientSocket has been closed");
+			SetConStatus(FALSE);
+			return 0;
+		}
+		nTotData += nRecvLen;
+
+	}
+	msg = bufRecv;
+	return nRecvLen;
+	
+}
+int SocketBlock::Socket::SendMsg(SOCKET RecvSocket, SOCKET SendSocket, std::string & msg)
+{
+	int nSendLen = 0;
+	int nTotData = 0;
+	int nDataLen = msg.length();
+	int ErrCode = 0;
+
+	memset(bufSend, 0, sizeof(bufSend));
+
+	if (statusConn)
+	{
+		
+		nSendLen = send(RecvSocket, (const char *)(&nDataLen), 4, 0);
+		
+		if (SOCKET_ERROR == nSendLen)
+		{
+			ErrCode = WSAGetLastError();
+			ShowSocketMsg(ErrCode,"ClientSocket:Send header msg failed");
+			SetConStatus(FALSE);
+			return SOCKET_ERROR;
+		}
+	
+		nSendLen = 0;
+	}
+	while (statusConn && (nTotData < nDataLen))
+	{
+		nSendLen = send(RecvSocket, msg.c_str() + nTotData, msg.length() - nTotData, 0);
+		if (SOCKET_ERROR == nSendLen)
+		{
+			ErrCode = WSAGetLastError();
+			ShowSocketMsg(ErrCode, "ClientSocket:Send  msg failed");
+			SetConStatus(FALSE);
+			return SOCKET_ERROR;
+		}
+		
+		nTotData += nSendLen;
+
+	}
+	
+	return nTotData;
+
+
+}
+SOCKET SocketBlock::Socket::CreateSocket(void)
+{
+	SOCKET newSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (INVALID_SOCKET == newSocket)
+	{
+	//	ShowErrorMsg();
+		int ErrCode = WSAGetLastError();
+		ShowSocketMsg(ErrCode, "Create Socket Failed !");
 		::WSACleanup();
-		return FALSE;
+		return INVALID_SOCKET;
 	}
-	return TRUE;
+	return newSocket;
 }
-void SocketBlock::TcpServer::ShowErrorMsg(void)
-{
-	int nErrCode = WSAGetLastError();
-	HLOCAL hlocal = NULL;
 
-	//获取错误的文本字符串
-	BOOL forMsg = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, \
-		nErrCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),(LPWSTR)&hlocal,0,NULL);
-
-	if (hlocal != NULL)
-	{
-		MessageBox(NULL, (LPCWSTR )LocalLock(hlocal),(LPCWSTR)"CLIENT ERROR", MB_OK);
-		LocalFree(hlocal);
-	}
-
-}
+/*
 bool SocketBlock::TcpServer::ReadDataThread(void)
 {
 	int nTotal = 0;         //n bytes have been read into buffer.
@@ -142,6 +232,8 @@ bool SocketBlock::TcpServer::ReadDataThread(void)
 
 	}
 }	
+*/
+/*
 bool SocketBlock::TcpServer::HandleDataThread(void)
 {
 	while (!ToQuit)
@@ -152,17 +244,40 @@ bool SocketBlock::TcpServer::HandleDataThread(void)
 	}
 	return FALSE;
 }
-bool SocketBlock::TcpServer::HandleData(const char * buff)
-{
+*/
 
-}
-int SocketBlock::TcpServer::HandleSocketError(const char * str)
+
+void SocketBlock::Socket::ShowSocketMsg(int ErrCode,const char * str)
 {
-	ShowSocketMsg(str);
-	WSACleanup();
-	return FALSE;
+	//Determine the way show the msg according to your need.As follows is a sample.
+	std::cerr << "ErrCode :" << ErrCode << " " << str << std::endl;
 }
-void SocketBlock::TcpServer::ShowSocketMsg(const char * str)
+void SocketBlock::Socket::ShowMsg(const char * str)
 {
-	MessageBox(NULL, (LPCWSTR)str, L"ERROR", MB_OK);
+	//Determine the way show the msg according to your need.As follows is a sample.
+	std::cout << str << std::endl;
+}
+bool SocketBlock::TcpClient::CreateClientSocket(void)
+{
+	clientSocket = CreateSocket();
+	return TRUE;
+}
+bool SocketBlock::TcpClient::ConnectToServe(int port, char * ip)
+{
+	SOCKADDR_IN addrClient;
+	addrClient.sin_family = AF_INET;
+	addrClient.sin_port = htons(port);
+	addrClient.sin_addr.s_addr = inet_addr(ip);
+	
+	int ret = connect(clientSocket, (const sockaddr *)&addrClient, sizeof(addrClient));
+	if (SOCKET_ERROR == ret)
+	{
+		int ErrCode = WSAGetLastError();
+		ShowSocketMsg(ErrCode, "ClientSocket:Connect failed");
+		SetConStatus(FALSE);
+		return FALSE;
+	}
+	SetConStatus(TRUE);
+	return TRUE;
+
 }
