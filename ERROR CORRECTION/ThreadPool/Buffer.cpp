@@ -11,6 +11,7 @@ Buffer::Buffer(std::size_t size):
 	notFull_(mutex_),
 	notEmpty_(mutex_),
 	size_(size)
+	hello c
 {}
 
 Buffer::~Buffer()
