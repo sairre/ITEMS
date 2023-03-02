@@ -17,7 +17,7 @@ Buffer::Buffer(std::size_t size):
 
 Buffer::~Buffer()
 {}
-
+bbbbbbbbbbbbbbbbbbbbbbbbbbb
 void Buffer::addElement(Task * elem)
 {
 	do this test
