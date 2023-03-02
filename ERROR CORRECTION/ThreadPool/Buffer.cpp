@@ -12,6 +12,7 @@ Buffer::Buffer(std::size_t size):
 	notEmpty_(mutex_),
 	size_(size)
 	this is test b
+	hello c
 {}
 
 Buffer::~Buffer()
