@@ -19,6 +19,7 @@ Buffer::~Buffer()
 
 void Buffer::addElement(Task * elem)
 {
+	do this test
 	MutexLockGuard mutexGurad(mutex_);
 	while(size_==queue_.size())
 		notFull_.wait();
